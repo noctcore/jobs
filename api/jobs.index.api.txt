@@ -1,0 +1,332 @@
+# @noctcore/jobs (root)
+
+## package.json exports
+{
+  ".": {
+    "import": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "require": {
+      "types": "./dist/index.d.cts",
+      "default": "./dist/index.cjs"
+    }
+  },
+  "./package.json": "./package.json"
+}
+
+## runtime exports
+DEFAULT_DRAIN_TIMEOUT_MS
+DEFAULT_DURATION_BUCKETS
+DEFAULT_JITTER
+DEFAULT_PRODUCER_COMMAND_TIMEOUT_MS
+DEFAULT_SHUTDOWN_DEADLINE_MS
+DEFAULT_SWEEPS_QUEUE
+ENVELOPE_KEY
+EnqueueUnavailableError
+InjectQueue
+JOBS_OPTIONS
+JobHost
+JobQueue
+JobsModule
+JobsRuntime
+QueuePause
+SHUTDOWN_SIGNALS
+Sweep
+UnrecoverableError
+Worker
+dedupe
+dedupeId
+defineQueue
+expo
+fatal
+fixed
+installGracefulShutdown
+isFinalAttempt
+isQueuePauseSignal
+openTelemetryTracing
+paceFrom
+parseRedisUrl
+producerConnectionOptions
+prometheusMetrics
+queueToken
+redactRedisUrl
+sentryReporter
+shutdownGracefully
+workerConnectionOptions
+
+## declarations
+AddOptions [interface]
+    readonly dedupe: Dedupe
+    readonly delay?: Duration
+    readonly priority?: number
+AddResult [interface]
+    readonly id: string
+Backoff [interface]
+    readonly [backoffBrand]: true
+    readonly delayMs: number
+    readonly jitter: number
+    readonly type: 'exponential' | 'fixed'
+BackoffOptions [interface]
+    readonly jitter?: number
+dedupe [const]: { readonly window: (key: DedupeKey, ttl: Duration) => Dedupe; readonly until: (key: DedupeKey) => Dedupe; readonly debounce: (key: DedupeKey, wait: Duration) => Dedupe; readonly none: () => Dedupe; }
+Dedupe [type] = { readonly [dedupeBrand]: true; readonly kind: 'none'; } | { readonly [dedupeBrand]: true; readonly kind: 'window' | 'until' | 'debounce'; readonly id: string; readonly ttlMs?: number; }
+dedupeId [function]: (key: DedupeKey) => string
+DedupeKey [type] = string | readonly string[]
+DEFAULT_DRAIN_TIMEOUT_MS [const]: 20000
+DEFAULT_DURATION_BUCKETS [const]: Array<number>
+DEFAULT_JITTER [const]: 0.5
+DEFAULT_PRODUCER_COMMAND_TIMEOUT_MS [const]: 3000
+DEFAULT_SHUTDOWN_DEADLINE_MS [const]: 25000
+DEFAULT_SWEEPS_QUEUE [const]: "jobs-sweeps"
+defineQueue [function]: <Jobs extends Record<keyof Jobs, object>>(name: string, policy: QueuePolicy) => QueueDefinition<Jobs>
+DrainResult [interface]
+    readonly abandoned: readonly string[]
+    readonly drained: readonly string[]
+Duration [type] = number | `${number}${DurationUnit}`
+DurationUnit [type] = 'ms' | 's' | 'm' | 'h' | 'd'
+EnqueueUnavailableError [class]
+    (new) (message?: string): EnqueueUnavailableError
+    (new) (message?: string, options?: ErrorOptions): EnqueueUnavailableError
+    cause?: unknown
+    message: string
+    readonly name = "EnqueueUnavailableError"
+    stack?: string
+    static captureStackTrace(targetObject: object, constructorOpt?: Function): void
+    static prepareStackTrace(err: Error, stackTraces: NodeJS.CallSite[]): any
+    static stackTraceLimit: number
+ENVELOPE_KEY [const]: "_jobs"
+ErrorReporter [interface]
+    report(error: unknown, context: FailureContext): void
+expo [function]: (delay: Duration, options?: BackoffOptions) => Backoff
+FailureContext [type] = { readonly kind: 'job'; readonly queue: string; readonly job: string; readonly jobId: string; readonly attempt: number; readonly maxAttempts: number; readonly context: Readonly<Record<string, string>>; } | { readonly kind: 'sweep'; readonly sweep: string; readonly jobId: string; }
+FailureKind [type] = 'retry' | 'fatal'
+fatal [function]: (message: string, options?: { cause?: unknown; }) => UnrecoverableError
+fixed [function]: (delay: Duration, options?: BackoffOptions) => Backoff
+GracefulShutdownOptions [interface]
+    readonly deadlineMs?: number
+    readonly drainTimeoutMs?: number
+    readonly exit?: (code: number) => void
+    readonly flush?: () => Promise<void>
+    readonly logger?: Pick<Logger, 'log' | 'error'>
+    readonly raise?: (signal: NodeJS.Signals) => void
+    readonly signals?: readonly NodeJS.Signals[]
+    readonly target?: SignalTarget
+InjectQueue [function]: (queue: QueueDefinition<object>) => ParameterDecorator
+installGracefulShutdown [function]: (app: INestApplicationContext, options?: GracefulShutdownOptions) => () => void
+isFinalAttempt [function]: (job: Pick<Job, "attemptsMade" | "opts">, error: unknown) => boolean
+isQueuePauseSignal [function]: (error: unknown) => boolean
+JobContextHook [interface]
+    capture(): Readonly<Record<string, string>> | undefined
+    run<T>(context: Readonly<Record<string, string>>, fn: () => T): T
+JobHost [class]<Q extends QueueDefinition<object> = QueueDefinition>
+    (new) <Q extends QueueDefinition<object> = QueueDefinition<JobMap>>(): JobHost<Q>
+    [HOST_BINDING]?: HostBinding
+    abstract handle(job: JobOf<JobsOf<Q>>): Promise<unknown>
+    classify?(error: unknown): FailureKind
+    onFinalFailure?(job: JobOf<JobsOf<Q>>, error: unknown): void | Promise<void>
+    protected pauseQueue(ms: number): Promise<Error>
+    protected readonly logger: Logger
+JobLabels [interface]
+    readonly job: string
+    readonly queue: string
+JobMap [type] = Record<string, object>
+JobOf [type]<Jobs> = { [Name in keyof Jobs & string]: JobRun<Name, Jobs[Name]>; }[keyof Jobs & string]
+JobQueue [class]<Jobs extends object = JobMap>
+    (new) <Jobs extends object = JobMap>(definition: QueueDefinition<Jobs>, bull: Queue, deps: JobQueueDeps): JobQueue<Jobs>
+    add<Name extends keyof Jobs & string>(name: Name, data: Jobs[Name], options: AddOptions): Promise<AddResult>
+    name: string
+    pauseFor(ms: number): Promise<number>
+    private guard
+    private readonly deps
+    readonly bull: Queue
+    readonly definition: QueueDefinition<Jobs>
+    readonly pause: QueuePause
+    releaseDedupe(key: DedupeKey): Promise<boolean>
+JobRun [interface]<Name extends string = string, Data = unknown>
+    readonly attempt: number
+    readonly context: Readonly<Record<string, string>>
+    readonly data: Data
+    readonly id: string
+    readonly maxAttempts: number
+    readonly name: Name
+    readonly queue: string
+    readonly raw: Job
+JOBS_OPTIONS [const]: typeof JOBS_OPTIONS
+JobsMetrics [interface]
+    jobAttempt?(labels: JobLabels & { readonly ok: boolean; }, seconds: number): void
+    jobFailed?(labels: JobLabels & { readonly final: boolean; }): void
+    sweepFailed?(sweep: string): void
+    sweepSucceeded?(sweep: string, at: Date): void
+JobsModule [class]
+    (new) (): JobsModule
+    static private static root
+    static static forFeature(queues: readonly QueueDefinition<object>[]): DynamicModule
+    static static forRoot(options: JobsModuleOptions): DynamicModule
+    static static forRootAsync(options: JobsModuleAsyncOptions): DynamicModule
+JobsModuleAsyncOptions [interface]
+    readonly imports?: ModuleMetadata['imports']
+    readonly inject?: InjectionToken[]
+    readonly useFactory: (...dependencies: never[]) => JobsModuleOptions | Promise<JobsModuleOptions>
+JobsModuleOptions [interface]
+    readonly context?: JobContextHook
+    readonly prefix?: string
+    readonly producer?: { /** * Bound on one Redis command and on one whole `add()`, in milliseconds. * Defaults to 3000. While an outage is known, `add()` refuses at once. */ readonly commandTimeoutMs?: number; }
+    readonly redisUrl: string
+    readonly shutdown?: { /** * How long draining waits for running jobs. Defaults to 20000 ms, which * leaves room for the rest of the shutdown inside the 25 s deadline of * `installGracefulShutdown` and a 30 s container stop grace period. */ readonly drainTimeoutMs?: number; }
+    readonly sweeps?: { /** The queue that carries sweep ticks. Defaults to `jobs-sweeps`; one per app. */ readonly queue?: string; /** Sweeps one process runs at once. Defaults to 1. */ readonly concurrency?: number; /** Remove schedulers no sweep declares at boot. Defaults to true. */ readonly reconcile?: boolean; /** Called after a sweep fails (after the metric and the error report). */ readonly onError?: (sweep: string, error: unknown) => void | Promise<void>; }
+    readonly telemetry?: JobsTelemetry
+    readonly workers?: boolean
+JobsOf [type]<Q> = Q extends QueueDefinition<infer Jobs> ? Jobs : never
+JobSpan [interface]
+    addEvent(name: string): void
+    recordException(error: unknown): void
+    setError(message: string): void
+JobsRuntime [class]
+    (new) (options: JobsModuleOptions, discovery: DiscoveryService, scanner: MetadataScanner, reflector: Reflector, moduleRef: ModuleRef): JobsRuntime
+    close(): Promise<void>
+    drain(timeoutMs?: number): Promise<DrainResult>
+    onApplicationBootstrap(): Promise<void>
+    onApplicationShutdown(): Promise<void>
+    onModuleDestroy(): Promise<void>
+    private applySchedulers
+    private applySchedulersUntilDone
+    private closeAll
+    private closing
+    private connectionDown
+    private discoverSweeps
+    private drainWorkers
+    private draining
+    private readonly baseConnection
+    private readonly commandTimeoutMs
+    private readonly discovery
+    private readonly limiterMax
+    private readonly logger
+    private readonly moduleRef
+    private readonly options
+    private readonly producer
+    private readonly queues
+    private readonly reflector
+    private readonly scanner
+    private readonly workers
+    private repeatOptions
+    private resolveLimiter
+    private runSweep
+    private scheduleSweeps
+    private startWorker
+    private startWorkerFor
+    private sweepNames
+    private sweepsScheduled
+    producerConnection: Redis
+    queue<Jobs extends object>(definition: QueueDefinition<Jobs>): JobQueue<Jobs>
+    scheduledSweeps: ReadonlyArray<string>
+    whenSweepsScheduled(): Promise<void>
+JobsTelemetry [interface]
+    readonly errors?: ErrorReporter
+    readonly metrics?: JobsMetrics
+    readonly tracing?: JobsTracing
+JobsTracing [interface]
+    inject(carrier: Record<string, string>): void
+    runInSpan<T>(name: string, attributes: Readonly<Record<string, string | number>>, carrier: Readonly<Record<string, string>>, fn: (span: JobSpan) => Promise<T>): Promise<T>
+OpenTelemetryApiLike [interface]
+    readonly context: { active(): unknown; }
+    readonly propagation: { inject(context: unknown, carrier: Record<string, string>): void; extract(context: unknown, carrier: Record<string, string>): unknown; }
+    readonly trace: { getTracer(name: string, version?: string): OtelTracer; }
+openTelemetryTracing [function]: (api: OpenTelemetryApiLike, options?: { readonly tracerName?: string; }) => JobsTracing
+Pace [interface]
+    readonly max: number
+    readonly per: Duration
+PaceFactory [interface]
+    readonly [paceFactoryBrand]: true
+    readonly inject: readonly InjectionToken[]
+    readonly useFactory: (...dependencies: never[]) => Pace
+paceFrom [function]: <const Tokens extends readonly InjectionToken[]>(source: { readonly inject: Tokens; readonly useFactory: (...dependencies: never[]) => Pace; }) => PaceFactory
+parseRedisUrl [function]: (url: string) => RedisOptions
+producerConnectionOptions [function]: (base: RedisOptions, commandTimeoutMs: number) => RedisOptions
+PromClientLike [interface]
+    readonly Counter: new (config: PromConfig) => PromMetric
+    readonly Gauge: new (config: PromConfig) => PromGauge
+    readonly Histogram: new (config: PromConfig) => PromHistogram
+prometheusMetrics [function]: (prom: PromClientLike, options?: PrometheusMetricsOptions) => JobsMetrics
+PrometheusMetricsOptions [interface]
+    readonly buckets?: number[]
+    readonly prefix?: string
+    readonly registers?: unknown[]
+QueueDefinition [interface]<Jobs extends object = JobMap>
+    readonly [jobsType]?: Jobs
+    readonly name: string
+    readonly policy: ResolvedPolicy
+QueuePause [class]
+    (new) (queue: Pick<Queue, "getRateLimitTtl" | "rateLimit">, limiterMax: () => number): QueuePause
+    forAtLeast(ms: number): Promise<number>
+    private extendTo
+    private lastTurn
+    private readonly limiterMax
+    private readonly queue
+QueuePolicy [type] = (RetryingPolicy | SingleAttemptPolicy) & { readonly keep: RetentionPolicy; /** Jobs one worker process runs at once. A whole number of at least 1. */ readonly concurrency: number; /** Optional rate limit for the queue as a whole. */ readonly pace?: Pace | PaceFactory; }
+queueToken [function]: (definition: Pick<QueueDefinition, "name">) => string
+redactRedisUrl [function]: (url: string) => string
+ResolvedPolicy [interface]
+    readonly attempts: number
+    readonly concurrency: number
+    readonly jobOptions: JobsOptions
+    readonly pace: Pace | PaceFactory | undefined
+Retention [type] = Duration | { readonly age: Duration; readonly count?: number; }
+RetentionPolicy [interface]
+    readonly completed: Retention
+    readonly failed: Retention
+RetryAttempts [type] = 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20
+RetryingPolicy [interface]
+    readonly attempts: RetryAttempts
+    readonly backoff: Backoff
+SentryLike [interface]
+    captureException(exception: unknown, hint?: { tags?: Record<string, string>; extra?: Record<string, unknown>; }): unknown
+sentryReporter [function]: (sentry: SentryLike) => ErrorReporter
+SHUTDOWN_SIGNALS [const]: ReadonlyArray<NodeJS.Signals>
+shutdownGracefully [function]: (app: INestApplicationContext, options?: Pick<GracefulShutdownOptions, "drainTimeoutMs" | "flush" | "logger" | "deadlineMs">) => Promise<ShutdownReport>
+ShutdownReport [interface]
+    readonly closed: boolean
+    readonly drain: DrainResult | undefined
+    readonly timedOut: boolean
+SingleAttemptPolicy [interface]
+    readonly attempts: 'once'
+    readonly backoff?: never
+Sweep [function]: (name: string, schedule: SweepSchedule) => MethodDecorator
+SweepContext [interface]
+    readonly jobId: string
+    readonly name: string
+    readonly scheduledAt: Date
+SweepSchedule [type] = { readonly cron: string; readonly tz: string; readonly every?: never; } | { readonly every: Duration; readonly cron?: never; readonly tz?: never; }
+UnrecoverableError [flags:33554436]: any
+Worker [function]: (queue: QueueDefinition<object>) => ClassDecorator
+workerConnectionOptions [function]: (base: RedisOptions) => RedisOptions
+
+## types reached through the exports (not exported by name)
+HostBinding [interface]
+    readonly pauseFor: (ms: number) => Promise<number>
+JobQueueDeps [interface]
+    readonly context: JobContextHook | undefined
+    readonly isConnected: () => boolean
+    readonly limiterMax: () => number
+    readonly timeoutMs: number
+    readonly tracing: JobsTracing | undefined
+OtelSpan [interface]
+    addEvent(name: string): void
+    end(): void
+    recordException(exception: Error | string): void
+    setStatus(status: { code: number; message?: string; }): void
+OtelTracer [interface]
+    startActiveSpan<F extends (span: OtelSpan) => unknown>(name: string, options: { attributes?: Record<string, string | number>; kind?: number; }, context: unknown, fn: F): ReturnType<F>
+PromConfig [interface]
+    buckets?: number[]
+    help: string
+    labelNames: string[]
+    name: string
+    registers?: unknown[]
+PromGauge [interface]
+    set(labels: Record<string, string>, value: number): void
+PromHistogram [interface]
+    observe(labels: Record<string, string>, value: number): void
+PromMetric [interface]
+    inc(labels: Record<string, string>, value?: number): void
+SignalTarget [type] = Pick<NodeJS.Process, 'on' | 'removeListener'>
