@@ -4,7 +4,9 @@ fail-on-severity: high
 # Runtime and development alike: development dependencies run in CI.
 fail-on-scopes: [runtime, development, unknown]
 
-# Permissive licences. A new licence needs an explicit decision here.
+# Permissive licences, plus the weak-copyleft and font licences the tree uses:
+# MPL-2.0 for the brand image renderer (@resvg/resvg-js, never published) and
+# OFL-1.1 for the docs site's fonts. A new licence needs an explicit decision here.
 allow-licenses:
   - MIT
   - MIT-0
@@ -18,3 +20,5 @@ allow-licenses:
   - CC-BY-4.0
   - Unlicense
   - Python-2.0
+  - MPL-2.0
+  - OFL-1.1
