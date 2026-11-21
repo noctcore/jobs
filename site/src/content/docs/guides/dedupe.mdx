@@ -1,0 +1,63 @@
+---
+title: Dedupe
+description: The four dedupe choices every add() picks from, how keys are hashed, and what does and does not release a key.
+---
+
+import { Code } from '@astrojs/starlight/components';
+import examples from '../../../../snippets/dedupe.ts?raw';
+
+Every `queue.add()` takes a `dedupe`. There is no default: a duplicate job is either impossible
+for your use case or something you chose to allow, and either way the call says which.
+
+| Dedupe | Behaviour |
+| --- | --- |
+| `dedupe.window(key, ttl)` | The first job runs; repeats within `ttl` are dropped, even after the first one finished or failed. |
+| `dedupe.until(key)` | Repeats are dropped while the first job waits, runs or retries; after it settles, the next is a new job. |
+| `dedupe.debounce(key, wait)` | The job waits `wait`; each repeat replaces the payload and restarts the wait, so only the last runs. |
+| `dedupe.none()` | Every call is a new job, said out loud. |
+
+<Code code={examples.trimEnd()} lang="ts" />
+
+When a dedupe drops a call, `add()` still resolves, to the id of the job already holding the key.
+
+## Keys
+
+A key is a string or an array of strings (`['receipt', orderId]`). The parts are joined and hashed
+with SHA-256 before they reach Redis, so ids and emails in a key are not stored in plain sight.
+
+- A colon in a part is refused. It is how BullMQ builds its own keys, and a key with one in it is
+  usually a Redis key or a jobId pasted in by mistake. Pass the parts as an array instead.
+- Empty parts, NUL characters and keys over 1024 characters are refused.
+- Build keys from values your server minted. A key a client controls (a request id header) lets
+  whoever pins it drop everyone's jobs that share it.
+
+## Why there is no jobId
+
+A dedupe built on a caller-chosen `jobId` only works while the first job is still retained. A burst
+of completions that evicts it reopens the window early, and a failed job kept in the dead-letter set
+blocks every repeat of that id for as long as it is kept. This package never lets the caller set a
+jobId: BullMQ assigns a fresh one, and dedupe goes through BullMQ's own deduplication, whose window
+is independent of retention.
+
+## Dedupe and retention
+
+The dedupe key lives in its own Redis key, not in the job, so automatic retention (`keep`) never
+ends a window early: a one-day window holds for a day even if the job was removed after an hour.
+
+## What releases a key
+
+- **`window`** holds its key until the ttl passes, whether the job is still waiting, completed,
+  failed, or was already removed by retention.
+- **`until`** releases its key when the job completes or fails for good. Retries keep it held.
+- **`debounce`** releases its key when the wait ends, which is when the job becomes due.
+
+Any key, of any kind, is released early by `queue.releaseDedupe(key)`, and by a manual
+`queue.bull.clean()`, `obliterate()` or `job.remove()` of the job that holds it.
+
+`queue.releaseDedupe(key)` resolves to whether a window was open. Use it for a deliberate resend,
+such as an admin re-sending a failed announcement.
+
+## Migrating keys
+
+Dedupe ids are hashes, so a window opened by code that used raw ids does not block the new code.
+Expect one duplicate per open window when you switch.

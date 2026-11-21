@@ -1,0 +1,92 @@
+/*
+ * Design tokens for the docs site, from the noctcore night and paper palette
+ * (the "Held run" brand in assets/brand/, shared with noctcore/auth):
+ *   paper #F6F5F1  ink #202B39  blue #355E87  night #17212D  pale blue #AAC8E2
+ * Converted to OKLCH and adjusted so every text pair passes WCAG AA in both
+ * themes. Night leads: it is the brand's first theme, not a palette swap of
+ * the day one. Starlight is dark in :root and light under [data-theme='light'].
+ *
+ * The brand assets (assets/brand/) read these values; change them together.
+ */
+@import '@fontsource-variable/manrope';
+@import '@fontsource/dm-mono/400.css';
+@import '@fontsource/dm-mono/500.css';
+
+:root {
+  /* Brand palette, exact. */
+  --nc-paper: oklch(0.97 0.005 95); /* #F6F5F1 */
+  --nc-ink-brand: oklch(0.285 0.03 255); /* #202B39 */
+  --nc-blue: oklch(0.471 0.081 250); /* #355E87 */
+  --nc-night: oklch(0.244 0.027 253); /* #17212D */
+  --nc-pale-blue: oklch(0.819 0.049 245); /* #AAC8E2 */
+
+  --nc-font: 'Manrope Variable', var(--sl-font-system);
+  --nc-font-display: 'Manrope Variable', var(--sl-font-system);
+  --nc-font-mono: 'DM Mono', var(--sl-font-system-mono);
+  --nc-display-weight: 720;
+  --nc-display-tracking: -0.025em;
+  --nc-body-size: 1.0625rem;
+  --nc-body-leading: 1.78;
+  --nc-radius: 4px;
+
+  /* Night (the default theme). */
+  --nc-bg: var(--nc-night);
+  --nc-bg-raised: oklch(0.285 0.03 253);
+  --nc-bg-deep: oklch(0.205 0.024 254);
+  --nc-line: oklch(0.38 0.03 252);
+  --nc-line-soft: oklch(0.31 0.028 253);
+  --nc-text-strong: oklch(0.965 0.006 95);
+  --nc-text: oklch(0.89 0.012 245);
+  --nc-text-soft: oklch(0.82 0.018 245);
+  --nc-muted: oklch(0.72 0.024 248);
+  --nc-faint: oklch(0.56 0.026 250);
+
+  --nc-accent: var(--nc-pale-blue);
+  --nc-accent-strong: oklch(0.9 0.035 245);
+  --nc-accent-soft: oklch(0.34 0.05 250);
+  --nc-on-accent: var(--nc-night);
+
+  /* Passing tracks, and the checks that stop on them. */
+  --nc-path: var(--nc-pale-blue);
+  --nc-stop: oklch(0.755 0.073 38); /* #D9A08E, the brand art's stop */
+  --nc-band: var(--nc-bg-deep);
+  --nc-on-band: var(--nc-text);
+  --nc-on-band-strong: var(--nc-text-strong);
+  --nc-on-band-muted: var(--nc-muted);
+  --nc-band-line: var(--nc-line-soft);
+  --nc-band-path: var(--nc-pale-blue);
+  --nc-band-stop: oklch(0.755 0.073 38);
+
+  --nc-code-bg: var(--nc-bg-deep);
+}
+
+:root[data-theme='light'] {
+  /* Day: paper and ink. */
+  --nc-bg: var(--nc-paper);
+  --nc-bg-raised: oklch(0.945 0.007 95);
+  --nc-bg-deep: oklch(0.925 0.009 95);
+  --nc-line: oklch(0.84 0.012 250);
+  --nc-line-soft: oklch(0.9 0.008 95);
+  --nc-text-strong: var(--nc-ink-brand);
+  --nc-text: oklch(0.32 0.03 255);
+  --nc-text-soft: oklch(0.38 0.028 255);
+  --nc-muted: oklch(0.48 0.025 255);
+  --nc-faint: oklch(0.6 0.02 255);
+
+  --nc-accent: var(--nc-blue);
+  --nc-accent-strong: oklch(0.4 0.075 250);
+  --nc-accent-soft: oklch(0.91 0.03 245);
+  --nc-on-accent: var(--nc-paper);
+
+  --nc-path: var(--nc-blue);
+  --nc-stop: oklch(0.507 0.092 37); /* #92513E */
+
+  /* The run band stays night on a day page. */
+  --nc-band: var(--nc-night);
+  --nc-on-band: oklch(0.89 0.012 245);
+  --nc-on-band-strong: oklch(0.965 0.006 95);
+  --nc-on-band-muted: oklch(0.72 0.024 248);
+  --nc-band-line: oklch(0.34 0.03 253);
+
+  --nc-code-bg: oklch(0.952 0.006 95);
+}

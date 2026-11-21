@@ -1,0 +1,71 @@
+---
+title: Workers and JobHost
+description: One worker class per queue on the JobHost base, typed jobs, a final-failure hook that runs once, fatal errors and pausing a queue for a rate limit.
+---
+
+import { Code } from '@astrojs/starlight/components';
+import worker from '../../../../snippets/mail.worker.ts?raw';
+import sms from '../../../../snippets/sms.worker.ts?raw';
+
+A worker is a singleton provider that extends `JobHost<typeof queue>` and carries
+`@Worker(queue)`. There is one worker class per queue; the runtime discovers it at boot and starts a
+BullMQ `Worker` for it with the concurrency and pace from the queue's policy.
+
+<Code code={worker.trimEnd()} lang="ts" title="mail.worker.ts" />
+
+Register the class as a provider in any module. Replicas that only enqueue set
+`JobsModule.forRoot({ workers: false })` and start no workers.
+
+## What a handler receives
+
+`handle(job)` gets a `JobOf<Jobs>`, a union discriminated by `job.name`, so a `switch` on the name
+narrows `job.data` to that job's payload.
+
+| Field | |
+| --- | --- |
+| `name`, `data` | The job's name and its payload, with the context envelope removed |
+| `id`, `queue` | BullMQ's job id and the queue name |
+| `attempt`, `maxAttempts` | This attempt, counting from 1, and the policy's attempts |
+| `context` | The fields the producer's [context hook](/jobs/guides/telemetry/#job-context) captured |
+| `raw` | The BullMQ `Job`, for what this view does not carry (progress, logs) |
+
+Return a value to store it as the job's result. The runtime wraps each attempt in the job's context
+and a span, records its duration and failures, and decides once whether a failure is final.
+
+## Final failures
+
+`onFinalFailure(job, error)` runs once, when the job fails for good: its last attempt threw, or the
+error was fatal. It is the place for a per-queue alert or a compensating write. An error thrown in
+it is logged and ignored; it never changes the job's outcome.
+
+The metric, the error reporter and `onFinalFailure` all use the same decision, so they always agree.
+A retry that a later attempt may absorb is logged and counted, never reported: a transient failure
+must not page anyone.
+
+## Errors no retry can fix
+
+An invalid payload or a record that no longer exists will fail on every attempt. Fail it at once:
+
+- `throw fatal('message', { cause })` throws BullMQ's `UnrecoverableError`, which moves the job
+  straight to the failed set.
+- Or implement `classify(error)` and return `'fatal'` for the error types you recognise. Without it,
+  only `UnrecoverableError` is fatal.
+
+## Pausing a queue for a rate limit
+
+When a downstream says "not now" (a 429 from a provider), retrying spends attempts on something
+that is not a failure. `throw await this.pauseQueue(ms)` stops the whole queue from handing out jobs
+for at least `ms`, across every replica, and hands this job back without spending an attempt.
+
+<Code code={sms.trimEnd()} lang="ts" title="sms.worker.ts" />
+
+A pause only ever extends: it reads the running pause first, so two workers that hit a limit at the
+same moment cannot shorten each other's pause. Bound how often one job is handed back (the
+`attemptsStarted` check above), or a job its downstream always refuses pauses everything behind it
+for good.
+
+Outside a worker, `queue.pause.forAtLeast(ms)` or `queue.pauseFor(ms)` does the same.
+
+## The logger
+
+`this.logger` is a Nest `Logger` named after the worker class.

@@ -1,0 +1,114 @@
+/*
+ * What this site adds to the shared noctcore docs styles (tokens, theme and
+ * landing are kept identical to the sibling sites).
+ */
+
+/*
+ * The shared faint tone measured 3.5:1 on night and 3.6:1 on paper, and
+ * Starlight draws its gray-4 text with it. Lifted here to clear 4.5:1 while
+ * staying a step quieter than --nc-muted.
+ */
+:root {
+  --nc-faint: oklch(0.67 0.026 250);
+}
+
+:root[data-theme='light'] {
+  --nc-faint: oklch(0.52 0.02 255);
+}
+
+/* Reference tables: an API name in the first column never breaks mid-call. */
+@media (min-width: 34.0625rem) {
+  .sl-markdown-content td:first-child code {
+    white-space: nowrap;
+  }
+}
+
+/* Each trap row links to the page that explains it: say so without hover. */
+.nc-passage__answer::after {
+  content: '\2192';
+  margin-inline-start: 0.4em;
+  color: var(--nc-band-path);
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+  display: inline-block;
+}
+
+.nc-passage__link:hover .nc-passage__answer::after,
+.nc-passage__link:focus-visible .nc-passage__answer::after {
+  transform: translateX(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nc-passage__answer::after {
+    transition: none;
+  }
+}
+
+/*
+ * Reference tables on a phone: a narrow second column turns every cell into a
+ * one-word strip, so each row becomes a short stacked block instead.
+ */
+@media (max-width: 34rem) {
+  .sl-markdown-content table,
+  .sl-markdown-content thead,
+  .sl-markdown-content tbody,
+  .sl-markdown-content tr,
+  .sl-markdown-content th,
+  .sl-markdown-content td {
+    display: block;
+  }
+
+  .sl-markdown-content table {
+    overflow: visible;
+  }
+
+  .sl-markdown-content thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .sl-markdown-content tr {
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--nc-line-soft);
+  }
+
+  .sl-markdown-content td {
+    border: 0;
+    padding: 0.1rem 0;
+  }
+
+  /* Starlight's flow spacing would put a paragraph gap between the cells. */
+  .sl-markdown-content tr > * + * {
+    margin-top: 0.2rem;
+  }
+
+  .sl-markdown-content td:first-child {
+    font-weight: 600;
+    color: var(--sl-color-white);
+  }
+}
+
+/* The 404: one column, the lead copy only. */
+.nc-hero--missing {
+  display: grid;
+  align-content: center;
+  min-height: calc(100vh - var(--sl-nav-height, 4rem) - 8rem);
+}
+
+.nc-hero--missing .nc-hero__tagline {
+  max-width: 34rem;
+  margin-top: 1.25rem;
+}
+
+.nc-hero--missing .nc-hero__actions {
+  margin-top: 1.75rem;
+}
+
+/* An inline code chip that breaks across lines keeps its padding and
+   corners on both halves instead of reading as two broken pills. */
+.sl-markdown-content :not(pre) > code {
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}

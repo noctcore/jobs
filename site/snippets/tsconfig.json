@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "types": ["node"],
+    // The samples import the package the way a consumer does; the path points
+    // at its sources so they typecheck without a build.
+    "paths": {
+      "@noctcore/jobs": ["../../packages/jobs/src/index.ts"]
+    }
+  },
+  "include": ["**/*.ts"]
+}

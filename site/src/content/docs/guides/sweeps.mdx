@@ -1,0 +1,59 @@
+---
+title: Sweeps
+description: '@Sweep runs a method on a cron or an interval, once per tick across every replica, with stale schedulers removed at boot and failures counted.'
+---
+
+import { Code } from '@astrojs/starlight/components';
+import sweeps from '../../../../snippets/maintenance.sweeps.ts?raw';
+
+`@Sweep(name, schedule)` goes on a method of any singleton provider. The schedule is
+`{ cron, tz }` or `{ every }`.
+
+<Code code={sweeps.trimEnd()} lang="ts" title="maintenance.sweeps.ts" />
+
+The method receives a `SweepContext`: the sweep's `name`, `scheduledAt` (when this tick was due) and
+the `jobId` of the BullMQ job that carried the tick. Use `scheduledAt` rather than `new Date()`, so
+a tick that runs late still works on the window it was scheduled for.
+
+## Once per tick, however many replicas
+
+A cron in `setInterval` or `@nestjs/schedule` runs once per replica. Sweeps are BullMQ job
+schedulers on one queue (`jobs-sweeps` by default): every replica upserts the same scheduler at boot,
+Redis holds one, and each tick is one job that one worker takes. Sweeps run on replicas that run
+workers; every replica schedules them, which is harmless.
+
+## A cron needs its zone
+
+`{ cron: '0 3 * * *' }` without `tz` does not compile. A cron read in the host's zone moves when the
+container image or the server changes, and shifts by an hour twice a year where the zone has
+daylight saving time.
+
+## Renamed and deleted sweeps
+
+The name is the scheduler's id. At boot the sweeps queue is reconciled: schedulers that no sweep
+declares are removed, so a renamed or deleted sweep stops firing. Turn this off with
+`sweeps.reconcile: false` if several apps share one sweeps queue (better: give each app its own
+`sweeps.queue`).
+
+During a rolling deploy, an old replica that boots after a new one re-adds the schedulers it knows,
+and the next new boot removes them again. If a renamed sweep must never run twice, deploy the rename
+when no old replica can still start.
+
+## Failures
+
+The method does not need its own `try`/`catch`. A failure is counted (`sweepFailed`), reported to
+the error reporter, passed to `sweeps.onError` and logged; the next tick is the retry.
+
+A sweep that silently stops is worse than one that fails, so the runtime also records a
+last-success timestamp. With [Prometheus](/jobs/guides/telemetry/) it is
+`jobs_sweep_last_success_timestamp_seconds`: alert on the time since the last success, not on
+failures alone.
+
+## Options
+
+| Option | Default | |
+| --- | --- | --- |
+| `sweeps.queue` | `jobs-sweeps` | The queue that carries the ticks. One per app |
+| `sweeps.concurrency` | `1` | Sweeps one process runs at once |
+| `sweeps.reconcile` | `true` | Remove schedulers no sweep declares at boot |
+| `sweeps.onError` | none | Called after a sweep fails |

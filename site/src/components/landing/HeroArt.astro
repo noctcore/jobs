@@ -1,0 +1,15 @@
+---
+/**
+ * The brand hero (assets/brand/hero-*.svg), one image per theme. The files do
+ * not read the system preference themselves, so the theme switch decides
+ * which one shows (landing.css). The run it draws is described in the alt.
+ */
+import heroDark from '../../assets/brand/hero-dark.svg?url';
+import heroLight from '../../assets/brand/hero-light.svg?url';
+
+const alt =
+  "Two paths. One job from add() to completed: the producer refuses at once while Redis is down so a request never hangs, the hashed dedupe key drops a repeat, the queue policy's jittered backoff spaces retries so a failed attempt goes back through it instead of a retry storm, and a JobHost worker runs the job. One sweep on two replicas: both upsert the same scheduler, Redis holds one, and each tick runs once.";
+---
+
+<img class="nc-hero-art nc-hero-art--dark" src={heroDark} width="1040" height="680" alt={alt} />
+<img class="nc-hero-art nc-hero-art--light" src={heroLight} width="1040" height="680" alt="" aria-hidden="true" />

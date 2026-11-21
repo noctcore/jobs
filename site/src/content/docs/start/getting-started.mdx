@@ -1,0 +1,79 @@
+---
+title: Getting started
+description: Install @noctcore/jobs, define a queue, enqueue with a dedupe, process it in a JobHost worker, schedule a sweep and shut down cleanly.
+---
+
+import { Code, Steps } from '@astrojs/starlight/components';
+import queue from '../../../../snippets/mail.queue.ts?raw';
+import appModule from '../../../../snippets/app.module.ts?raw';
+import signup from '../../../../snippets/signup.service.ts?raw';
+import worker from '../../../../snippets/mail.worker.ts?raw';
+import sweeps from '../../../../snippets/maintenance.sweeps.ts?raw';
+import main from '../../../../snippets/main.ts?raw';
+
+This page builds one queue end to end: a mail queue with two typed jobs, a service that enqueues
+one, a worker that processes both, an hourly sweep, and a shutdown that waits for running jobs.
+Every sample with a file name on this site is compiled against the package's sources when the site
+builds, so it matches the current API.
+
+<Steps>
+
+1. **Install** the package and its two runtime peers.
+
+   ```sh
+   bun add @noctcore/jobs bullmq ioredis
+   # or: pnpm add / npm install
+   ```
+
+   Peers: `@nestjs/common` and `@nestjs/core` 11 or 12, `bullmq` 6.3 or later (below 7),
+   `ioredis` 5 or 6. Node 22 or later. Redis must run with `maxmemory-policy noeviction`, as BullMQ
+   requires.
+
+2. **Define the queue**, its policy and its typed jobs, in a file both producers and workers
+   import. The policy fields are all required; see [Queues and policies](/jobs/guides/queues-and-policies/).
+
+   <Code code={queue.trimEnd()} lang="ts" title="mail.queue.ts" />
+
+3. **Register the module** once, and the queues where they are used. `AppConfig` stands for your
+   own configuration service.
+
+   <Code code={appModule.trimEnd()} lang="ts" title="app.module.ts" />
+
+4. **Enqueue**, choosing a dedupe every time. Here a second welcome mail for the same user within a
+   day is dropped. See [Dedupe](/jobs/guides/dedupe/) for the four kinds.
+
+   <Code code={signup.trimEnd()} lang="ts" title="signup.service.ts" />
+
+   `add()` resolves to `{ id }`. When the dedupe dropped the call, the id is that of the job
+   already holding the key. While Redis is unreachable it rejects with `EnqueueUnavailableError`
+   within 3 seconds, so your request handler decides what to do instead of hanging.
+
+5. **Process** in a worker class, one per queue. `job.name` narrows `job.data`.
+
+   <Code code={worker.trimEnd()} lang="ts" title="mail.worker.ts" />
+
+6. **Run something on a schedule** with `@Sweep`. Each tick runs once across every replica.
+
+   <Code code={sweeps.trimEnd()} lang="ts" title="maintenance.sweeps.ts" />
+
+7. **Stop cleanly.** `installGracefulShutdown` drains the workers before the app closes.
+
+   <Code code={main.trimEnd()} lang="ts" title="main.ts" />
+
+</Steps>
+
+## Run it locally
+
+BullMQ needs a Redis with `noeviction`:
+
+```sh
+docker run --rm -p 6379:6379 redis:7 redis-server --maxmemory-policy noeviction
+REDIS_URL=redis://localhost:6379 node dist/main.js
+```
+
+## Next
+
+- [Queues and policies](/jobs/guides/queues-and-policies/): what each policy field does and what does
+  not compile.
+- [Workers and JobHost](/jobs/guides/workers/): final failures, fatal errors and pausing a queue.
+- [Migrating from @nestjs/bullmq](/jobs/migrating/nestjs-bullmq/), one queue at a time.

@@ -1,0 +1,23 @@
+---
+/** One queue file, imported by producers and workers alike: the policy and the typed jobs. */
+import { Code } from '@astrojs/starlight/components';
+import source from '../../../snippets/mail.queue.ts?raw';
+---
+
+<section class="nc-section nc-sample not-content" aria-labelledby="nc-sample-title">
+  <div class="nc-sample__text">
+    <h2 id="nc-sample-title">One file, both sides.</h2>
+    <p>
+      A queue is defined once, with its policy and its jobs, in a file that producers and workers
+      both import. Every field BullMQ would leave to a default is required here.
+    </p>
+    <ol class="nc-steps">
+      <li><span><code>attempts</code> is a literal from 2 to 20, or <code>'once'</code>.</span></li>
+      <li><span>A retry needs <code>expo()</code> or <code>fixed()</code>, jittered by default.</span></li>
+      <li><span><code>keep</code> bounds completed and failed jobs, always with an age.</span></li>
+    </ol>
+  </div>
+  <div class="nc-sample__code">
+    <Code code={source.trimEnd()} lang="ts" title="mail.queue.ts" wrap />
+  </div>
+</section>

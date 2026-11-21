@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "experimentalDecorators": true,
+    "types": ["node"],
+    "paths": {
+      "@noctcore/jobs": ["../../packages/jobs/src/index.ts"]
+    }
+  },
+  "include": ["entries", "../../packages/jobs/src"]
+}

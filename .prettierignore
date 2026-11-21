@@ -7,3 +7,5 @@ api
 .changeset/*.md
 # Docs prose is wrapped by hand.
 **/*.md
+# The docs site has its own Astro tooling.
+site
