@@ -1,0 +1,6 @@
+# What CodeQL reads: the package, its tests and the repo scripts. Build output
+# is not ours to fix, and findings in it would bury the ones that are.
+name: noctcore-jobs
+paths-ignore:
+  - '**/dist/**'
+  - '**/node_modules/**'

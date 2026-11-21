@@ -1,0 +1,47 @@
+name: scorecard
+
+# OpenSSF Scorecard: scores the repository's supply-chain practices (pinned
+# actions, token permissions, branch protection, signed releases, and so on).
+# The results are published to the public Scorecard API, which backs the badge
+# in the README, and uploaded to code scanning.
+#
+# Publishing puts rules on this workflow (the API refuses results otherwise):
+# no workflow-level env or write permissions, only the scorecard job may ask
+# for id-token, and that job may only use checkout, upload-artifact,
+# upload-sarif and the scorecard action itself.
+#
+# Every action is pinned to a full commit SHA with its version beside it.
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '41 5 * * 2'
+  # Re-score when the branch protection rules change.
+  branch_protection_rule:
+  workflow_dispatch: {}
+
+permissions: {}
+
+jobs:
+  analysis:
+    name: scorecard
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+      security-events: write # upload the results to code scanning
+      id-token: write # sign the results published to the Scorecard API
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ossf/scorecard-action@fa7117db83c52d787ae5a89f350999701505d78e # v2.5.0
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          publish_results: true
+      - uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          sarif_file: results.sarif
+          category: scorecard

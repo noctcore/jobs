@@ -1,0 +1,25 @@
+name: labeler
+
+# Plain pull_request (not pull_request_target): the workflow file and the
+# labeler config come from the PR itself and nothing from the base runs with
+# write access to a forked head. Fork PRs get a read only token, so they are
+# skipped here and labeled by a maintainer.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions: {}
+
+jobs:
+  label:
+    # Dependabot runs get a read only token too; dependabot.yml sets its labels.
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/labeler@bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13 # v7.0.0
+        with:
+          sync-labels: false

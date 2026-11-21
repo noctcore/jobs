@@ -1,0 +1,124 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# A newer push to the same pull request makes the older run worthless.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    name: build · lint · typecheck · package shape
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.2
+      - run: bun install --frozen-lockfile
+      # A frozen install passes even when bun.lock records stale workspace
+      # versions (changeset version does not touch the lockfile), so compare a
+      # refreshed lockfile with the committed one.
+      - name: bun.lock matches the manifests
+        run: bun install --lockfile-only && git diff --exit-code -- bun.lock
+      - run: bun run format:check
+      - run: bun run build
+      - run: bun run typecheck
+      # Type-aware lint, never with --cache.
+      - run: bun run lint
+      # The public API, compared with the report in api/.
+      - run: bun run check:api
+      # A new runtime dependency ships into every consumer's app, so it needs an
+      # entry in scripts/runtime-dependencies.json (an explicit decision).
+      - run: bun run check:deps
+      # Every action pinned to a full SHA with its version comment, and a
+      # top-level permissions block in every workflow.
+      - run: bun run check:workflows
+      # Packs the package and checks the tarball with publint and
+      # @arethetypeswrong/cli.
+      - run: bun run check:package
+
+  # Unit and type tests. The Windows leg is there because the owner develops on
+  # both systems.
+  test:
+    name: test${{ matrix.os == 'windows-latest' && ' · windows' || '' }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-latest]
+    steps:
+      - if: runner.os == 'Windows'
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.2
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - run: bun run test
+
+  # The integration suite against real Redis, started from the repo's own
+  # docker-compose.yml (a service container cannot pass --requirepass, which
+  # the URL parsing suite needs). JOBS_REQUIRE_SERVICES makes a missing Redis a
+  # failure: a suite that silently skipped would be green while proving nothing.
+  integration:
+    name: integration · redis
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      REDIS_URL: redis://localhost:6395
+      REDIS_AUTH_URL: redis://default:s3cret%3Ap%40ss%2Fword@localhost:6396/3
+      JOBS_REQUIRE_SERVICES: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.2
+      - run: docker compose up -d --wait
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - run: bun run test:integration
+
+  # The package declares NestJS >=11 <13, BullMQ >=6.3.0 <7 and ioredis
+  # >=5.4.0 <7 as peers. The jobs above run the newest (the dev dependencies);
+  # this one installs the oldest each range allows and runs the typecheck, the
+  # unit tests and the integration suite against them.
+  peer-floor:
+    name: peer range floor (nest 11.0.0, bullmq 6.3.0, ioredis 5.4.0)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      REDIS_URL: redis://localhost:6395
+      REDIS_AUTH_URL: redis://default:s3cret%3Ap%40ss%2Fword@localhost:6396/3
+      JOBS_REQUIRE_SERVICES: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.2
+      - run: docker compose up -d --wait
+      - run: bun install --frozen-lockfile
+      - name: Install the oldest versions the peer ranges allow
+        working-directory: packages/jobs
+        run: bun add --dev --exact @nestjs/common@11.0.0 @nestjs/core@11.0.0 @nestjs/testing@11.0.0 bullmq@6.3.0 ioredis@5.4.0
+      - name: Typecheck and test on the floor
+        working-directory: packages/jobs
+        run: bun run typecheck && bun run test && bun run test:integration

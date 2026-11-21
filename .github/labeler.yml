@@ -1,0 +1,28 @@
+# Path based labels for pull requests, applied by .github/workflows/labeler.yml.
+# Names match the repo labels (gh label list); the labeler never creates one.
+
+'pkg: jobs':
+  - changed-files:
+      - any-glob-to-any-file: ['packages/jobs/**']
+
+'area: testing':
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'packages/*/tests/**'
+          - 'packages/*/vitest*.config.ts'
+          - 'docker-compose.yml'
+
+'area: docs':
+  - changed-files:
+      - any-glob-to-any-file:
+          # Not **/*.md: every changeset in .changeset/ is Markdown too.
+          - '*.md'
+          - 'docs/**'
+          - 'packages/*/README.md'
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/**'
+          - 'scripts/**'
+          - 'eslint.config.js'
