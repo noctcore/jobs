@@ -1,0 +1,24 @@
+name: Feature or safer default
+description: A new option, a stricter default, or a trap the package should prevent.
+labels: ['enhancement']
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What went wrong, or what you had to write by hand. A real incident is the best argument.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: The proposal
+      description: The API you would like, and what it should refuse.
+      render: ts
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: What you do today instead.

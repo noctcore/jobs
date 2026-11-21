@@ -1,0 +1,45 @@
+name: Bug report
+description: Something in @noctcore/jobs crashed, lost a job, ran one twice or misbehaved.
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. If the bug lets someone run code, read job payloads or drop other people's jobs, **do not file it here**: report it privately as [SECURITY.md](https://github.com/noctcore/jobs/blob/main/SECURITY.md) describes.
+
+        Never paste secrets, Redis passwords, real email addresses or real hostnames.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The @noctcore/jobs version, or the commit SHA you built from.
+    validations:
+      required: true
+  - type: input
+    id: runtime
+    attributes:
+      label: Runtime
+      description: For example Node 22.12, NestJS 11.1, BullMQ 6.7, ioredis 5.11, Redis 7.4 (one replica or several).
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: The smallest queue definition, worker and calls that show it.
+      render: ts
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: The error and its stack, or the log line. Read it before pasting.
+    validations:
+      required: true
