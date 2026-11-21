@@ -19,6 +19,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check:package": "bun scripts/check-package-shape.ts",
+    "docs:build": "bun run --filter '@noctcore/jobs-docs' docs:build",
     "check:api": "bun scripts/api-snapshot.ts --check",
     "check:deps": "bun scripts/check-runtime-deps.ts",
     "check:workflows": "bun scripts/check-workflows.ts",
