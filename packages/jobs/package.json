@@ -1,6 +1,6 @@
 {
   "name": "@noctcore/jobs",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "BullMQ for NestJS with safe defaults: required retry and retention policies, required dedupe keys, fail-fast producers, one-run-per-tick sweeps and graceful shutdown.",
   "license": "MIT",
   "type": "module",

@@ -1,5 +1,11 @@
 # @noctcore/jobs
 
+## 0.1.1
+
+### Patch Changes
+
+- [#5](https://github.com/noctcore/jobs/pull/5) [`333dfaa`](https://github.com/noctcore/jobs/commit/333dfaa7e90ec31a4321b5e6b7436eb5e3816363) Thanks [@Shironex](https://github.com/Shironex)! - Point the package homepage and README at the new docs site, https://noctcore.github.io/jobs/.
+
 ## 0.1.0
 
 ### Minor Changes
