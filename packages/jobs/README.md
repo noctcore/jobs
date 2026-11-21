@@ -34,7 +34,6 @@ export class MailWorker extends JobHost<typeof mail> {
 0.x: the API may change between minor versions, so pin an exact version.
 
 The full guide (every API, the trap each default prevents, how dedupe interacts with retention, and
-migrating from BullMQ or `@nestjs/bullmq`) is in the
-[repository README](https://github.com/noctcore/jobs#readme).
+migrating from BullMQ or `@nestjs/bullmq`) is in the [docs](https://noctcore.github.io/jobs/).
 
 MIT licensed.
