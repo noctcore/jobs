@@ -1,0 +1,14 @@
+{
+  "name": "noctcore-jobs-brand",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "design": "node design.mjs",
+    "export": "node export.mjs",
+    "check": "node export.mjs --check"
+  },
+  "dependencies": {
+    "@resvg/resvg-js": "2.6.2",
+    "fontkit": "2.0.4"
+  }
+}
