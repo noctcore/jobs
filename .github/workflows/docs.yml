@@ -1,0 +1,87 @@
+name: docs
+
+# Builds the docs site (site/) and deploys it to GitHub Pages at
+# https://noctcore.github.io/jobs/.
+#
+# Pull requests build and check the site without deploying.
+#
+# Deploying needs one-time owner setup: enable Pages (Settings, Pages, source
+# GitHub Actions), then set the repository variable PAGES_ENABLED=true
+# (Settings, Secrets and variables, Actions, Variables). Until then the build
+# job still runs and the deploy job is skipped instead of failing.
+#
+# Every action is pinned to a full commit SHA with its version beside it.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      # The API reference, the typechecked samples and the changelog come from these.
+      - 'packages/*/src/**'
+      - 'packages/jobs/CHANGELOG.md'
+      - 'package.json'
+      - 'bun.lock'
+      - '.github/workflows/docs.yml'
+  pull_request:
+    paths:
+      - 'site/**'
+      # The API reference, the typechecked samples and the changelog come from these.
+      - 'packages/*/src/**'
+      - 'packages/jobs/CHANGELOG.md'
+      - 'package.json'
+      - 'bun.lock'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+# One deploy at a time; never cancel one halfway through.
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: build site
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.2
+      # Astro 7 needs Node 22.12 or newer; the runner image ships an older one.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '^22.18'
+      - run: bun install --frozen-lockfile
+      # astro sync, the site's own types, and every sample under site/snippets
+      # against the package sources.
+      - run: bun run --filter '@noctcore/jobs-docs' typecheck
+      # The link checker's and the changelog generator's own tests.
+      - run: bun run --filter '@noctcore/jobs-docs' test
+      # astro build -> scripts/check-build.ts (index exists, every path under /jobs/).
+      - run: bun run docs:build
+      - if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.PAGES_ENABLED == 'true'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site/dist
+
+  deploy:
+    name: deploy to Pages
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.PAGES_ENABLED == 'true'
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
