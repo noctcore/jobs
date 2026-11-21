@@ -19,6 +19,8 @@
           - '*.md'
           - 'docs/**'
           - 'packages/*/README.md'
+          - 'site/**'
+          - 'assets/brand/**'
 
 ci:
   - changed-files:
