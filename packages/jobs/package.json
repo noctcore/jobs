@@ -46,7 +46,7 @@
     "url": "git+https://github.com/noctcore/jobs.git",
     "directory": "packages/jobs"
   },
-  "homepage": "https://github.com/noctcore/jobs#readme",
+  "homepage": "https://noctcore.github.io/jobs/",
   "bugs": "https://github.com/noctcore/jobs/issues",
   "engines": {
     "node": ">=22"
