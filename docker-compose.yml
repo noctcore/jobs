@@ -1,0 +1,31 @@
+# Real Redis for the integration suite. Ports are offset from the default so a
+# local Redis keeps running.
+#   docker compose up -d --wait
+#   bun run test:integration
+#
+# - redis: the plain server most suites use. BullMQ needs
+#   `maxmemory-policy noeviction`, or Redis may evict its keys under memory
+#   pressure.
+# - redis-auth: the same server behind a password, so the URL parsing suite
+#   proves a password, a username and a db index survive all the way to a
+#   worker's connection.
+services:
+  redis:
+    image: redis:7.4-alpine
+    command: ['redis-server', '--maxmemory-policy', 'noeviction']
+    ports: ['6395:6379']
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 2s
+      timeout: 2s
+      retries: 20
+  redis-auth:
+    image: redis:7.4-alpine
+    command:
+      ['redis-server', '--maxmemory-policy', 'noeviction', '--requirepass', 's3cret:p@ss/word']
+    ports: ['6396:6379']
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-a', 's3cret:p@ss/word', '--no-auth-warning', 'ping']
+      interval: 2s
+      timeout: 2s
+      retries: 20

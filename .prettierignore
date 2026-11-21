@@ -1,0 +1,9 @@
+# Generated or recorded output: formatting it would only churn diffs.
+dist
+node_modules
+bun.lock
+api
+**/CHANGELOG.md
+.changeset/*.md
+# Docs prose is wrapped by hand.
+**/*.md

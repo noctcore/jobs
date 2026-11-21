@@ -1,0 +1,7 @@
+{
+  "@noctcore/jobs": {
+    "dependencies": [],
+    "optionalDependencies": [],
+    "peerDependencies": ["@nestjs/common", "@nestjs/core", "bullmq", "ioredis"]
+  }
+}
