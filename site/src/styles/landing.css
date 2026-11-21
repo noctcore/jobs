@@ -1,0 +1,547 @@
+/*
+ * The splash landing page (index.mdx and components/landing). Docs pages
+ * never load these classes, so they stay calm.
+ */
+
+/* ---------- Hero ---------- */
+.nc-hero {
+  display: grid;
+  column-gap: 4rem;
+  padding-top: clamp(2rem, 1rem + 4vw, 4.5rem);
+}
+
+.nc-eyebrow {
+  margin: 0 0 1.25rem;
+  font-size: var(--sl-text-sm);
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  color: var(--nc-accent-strong);
+}
+
+.nc-hero h1 {
+  margin: 0;
+  max-width: 12ch;
+  font-family: var(--nc-font-display);
+  font-size: clamp(2.75rem, 1.2rem + 5.4vw, 6.25rem);
+  font-weight: 760;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+  color: var(--nc-text-strong);
+  text-wrap: balance;
+}
+
+.nc-hero__tagline {
+  margin: 1.5rem 0 0;
+  max-width: 36ch;
+  font-size: clamp(1.125rem, 1rem + 0.45vw, 1.3rem);
+  line-height: 1.55;
+  color: var(--nc-text-soft);
+  text-wrap: pretty;
+}
+
+.nc-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  margin-top: 2rem;
+}
+
+.nc-install {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.5rem 0 0;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--nc-line);
+  border-radius: var(--nc-radius);
+  font-family: var(--nc-font-mono);
+  font-size: var(--sl-text-sm);
+  color: var(--nc-text-strong);
+}
+
+.nc-install code {
+  background: none;
+  padding: 0;
+  font: inherit;
+}
+
+.nc-install__prompt {
+  color: var(--nc-faint);
+}
+
+.nc-hero__status {
+  margin: 0.9rem 0 0;
+  font-size: var(--sl-text-sm);
+  color: var(--nc-muted);
+}
+
+.nc-hero__art {
+  display: none;
+  margin: clamp(1.5rem, 4vw, 3rem) 0 0;
+}
+
+.nc-hero-art {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--nc-line-soft);
+  border-radius: calc(var(--nc-radius) * 2);
+}
+
+/* One image per theme: the files do not read the system preference themselves. */
+.nc-hero-art--light,
+:root[data-theme='light'] .nc-hero-art--dark {
+  display: none;
+}
+
+:root[data-theme='light'] .nc-hero-art--light {
+  display: block;
+}
+
+/* The art's labels need room to read: show it from tablet width up. */
+@media (min-width: 40rem) {
+  .nc-hero__art {
+    display: block;
+  }
+}
+
+@media (min-width: 56rem) {
+  .nc-hero {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    align-items: end;
+  }
+
+  .nc-hero__tagline {
+    margin-top: 0;
+  }
+
+  .nc-hero__art {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---------- Shared section rhythm ---------- */
+.nc-section,
+.nc-band {
+  margin-top: 0;
+}
+
+.nc-section {
+  padding-block: clamp(3.5rem, 2rem + 5vw, 6.5rem);
+}
+
+.nc-section h2,
+.nc-band h2 {
+  margin: 0;
+  font-family: var(--nc-font-display);
+  font-size: clamp(1.9rem, 1.1rem + 2.6vw, 3.25rem);
+  font-weight: 740;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--nc-text-strong);
+  text-wrap: balance;
+}
+
+.nc-section__head {
+  max-width: 40rem;
+}
+
+.nc-section__head p {
+  margin: 1.1rem 0 0;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--nc-text-soft);
+}
+
+/* ---------- The run band ---------- */
+.nc-band {
+  /* Full bleed without 100vw, so no horizontal scroll where scrollbars take space. */
+  background: var(--nc-band);
+  box-shadow: 0 0 0 100vmax var(--nc-band);
+  clip-path: inset(0 -100vmax);
+  padding-block: clamp(3.5rem, 2rem + 5vw, 6.5rem);
+  color: var(--nc-on-band);
+}
+
+.nc-band h2 {
+  color: var(--nc-on-band-strong);
+}
+
+.nc-band .nc-section__head p {
+  color: var(--nc-on-band);
+}
+
+.nc-passage {
+  list-style: none;
+  margin: 3rem 0 0;
+  padding: 0;
+}
+
+.nc-passage__link {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  column-gap: 0.75rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.nc-passage__node {
+  grid-row: 1 / span 2;
+  position: relative;
+  /* The run: one continuous line through every row. */
+  background: linear-gradient(var(--nc-band-path), var(--nc-band-path)) center / 2px 100% no-repeat;
+}
+
+.nc-passage__node::after {
+  /* The module the path runs through: the square core of the mark. */
+  content: '';
+  position: absolute;
+  top: 1.55rem;
+  left: 50%;
+  width: 0.8rem;
+  height: 0.8rem;
+  translate: -50% 0;
+  background: var(--nc-band-path);
+}
+
+.nc-passage__failure,
+.nc-passage__answer {
+  grid-column: 2;
+}
+
+.nc-passage__failure {
+  padding-top: 1.2rem;
+  font-size: 1.0625rem;
+  font-weight: 650;
+  line-height: 1.4;
+  color: var(--nc-on-band-strong);
+}
+
+.nc-passage__label {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: var(--sl-text-xs);
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  color: var(--nc-band-stop);
+}
+
+.nc-passage__answer {
+  padding: 0.4rem 0 1.4rem;
+  border-bottom: 1px solid var(--nc-band-line);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--nc-on-band);
+}
+
+.nc-passage__module {
+  display: block;
+  margin-bottom: 0.15rem;
+  padding: 0;
+  background: none;
+  font-family: var(--nc-font-mono);
+  font-size: var(--sl-text-sm);
+  color: var(--nc-band-path);
+}
+
+.nc-passage__link:hover .nc-passage__failure,
+.nc-passage__link:focus-visible .nc-passage__failure {
+  text-decoration: underline;
+  text-decoration-color: var(--nc-band-stop);
+  text-underline-offset: 0.25em;
+}
+
+@media (min-width: 56rem) {
+  .nc-passage__link {
+    grid-template-columns: minmax(0, 1fr) 7rem minmax(0, 1.15fr);
+    column-gap: 0;
+  }
+
+  .nc-passage__node {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .nc-passage__node::after {
+    top: 50%;
+    translate: -50% -50%;
+  }
+
+  /* The failure's path: dashed, coming in from the left, ending at a stop bar short of the core. */
+  .nc-passage__wire {
+    display: block;
+    position: absolute;
+    top: calc(50% - 1px);
+    left: 0;
+    right: calc(50% + 1.2rem);
+    height: 2px;
+    overflow: hidden;
+  }
+
+  .nc-passage__dash {
+    display: block;
+    height: 100%;
+    background: repeating-linear-gradient(
+      to right,
+      var(--nc-band-stop) 0 0.4rem,
+      transparent 0.4rem 0.7rem
+    );
+    opacity: 0.85;
+  }
+
+  .nc-passage__stop {
+    display: block;
+    position: absolute;
+    top: calc(50% - 0.6rem);
+    right: calc(50% + 1rem);
+    width: 3px;
+    height: 1.2rem;
+    background: var(--nc-band-stop);
+  }
+
+  .nc-passage__failure {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    padding: 1.6rem 1.5rem 1.6rem 0;
+    text-align: end;
+    font-size: 1.125rem;
+  }
+
+  .nc-passage__answer {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: center;
+    padding: 1.6rem 0 1.6rem 1.5rem;
+    border-bottom: 0;
+  }
+
+  .nc-passage__step + .nc-passage__step .nc-passage__link {
+    border-top: 1px solid var(--nc-band-line);
+  }
+}
+
+/* ---------- Code sample ---------- */
+.nc-sample {
+  display: grid;
+  gap: 2.5rem;
+}
+
+.nc-sample__text p {
+  margin: 1.1rem 0 0;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: var(--nc-text-soft);
+}
+
+.nc-sample__text code,
+.nc-rules code,
+.nc-packages code {
+  font-family: var(--nc-font-mono);
+  font-size: 0.9em;
+  background: var(--nc-bg-raised);
+  border: 1px solid var(--nc-line-soft);
+  border-radius: var(--nc-radius);
+  padding: 0.05em 0.3em;
+  color: var(--nc-text-strong);
+}
+
+.nc-steps {
+  list-style: none;
+  counter-reset: nc-step;
+  margin: 1.75rem 0 0;
+  padding: 0;
+}
+
+.nc-steps li {
+  counter-increment: nc-step;
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  padding: 0.8rem 0;
+  border-top: 1px solid var(--nc-line-soft);
+  line-height: 1.55;
+  color: var(--nc-text);
+}
+
+.nc-steps li::before {
+  content: counter(nc-step, decimal-leading-zero);
+  font-family: var(--nc-font-mono);
+  font-size: var(--sl-text-sm);
+  line-height: 1.75;
+  color: var(--nc-accent);
+}
+
+.nc-sample__code {
+  min-width: 0;
+}
+
+@media (min-width: 56rem) {
+  .nc-sample {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 4rem;
+    align-items: start;
+  }
+}
+
+/* ---------- What it refuses to do ---------- */
+.nc-rules {
+  display: grid;
+  gap: 2rem;
+  padding-top: 0;
+}
+
+.nc-rules__list {
+  margin: 0;
+}
+
+.nc-rule {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1.25rem 0;
+  border-top: 1px solid var(--nc-line);
+}
+
+.nc-rule dt {
+  font-family: var(--nc-font-display);
+  font-size: 1.1875rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--nc-text-strong);
+}
+
+.nc-rule__no {
+  color: var(--nc-muted);
+  font-weight: 500;
+}
+
+.nc-rule dd {
+  margin: 0;
+  max-width: 52ch;
+  line-height: 1.65;
+  color: var(--nc-text-soft);
+}
+
+.nc-rule--lead dt {
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 1.9rem);
+  letter-spacing: -0.025em;
+}
+
+.nc-rule--lead dd {
+  font-size: 1.125rem;
+}
+
+@media (min-width: 56rem) {
+  .nc-rules {
+    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+    gap: 4rem;
+  }
+
+  .nc-rule {
+    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+    gap: 2rem;
+    align-items: baseline;
+  }
+
+  .nc-rule--lead {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    padding-bottom: 2rem;
+  }
+}
+
+/* ---------- Packages and next steps ---------- */
+.nc-packages {
+  padding-top: 0;
+}
+
+.nc-packages__list {
+  list-style: none;
+  margin: 1.75rem 0 0;
+  padding: 0;
+}
+
+.nc-packages__list li {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--nc-line-soft);
+  color: var(--nc-text-soft);
+  line-height: 1.6;
+}
+
+.nc-packages__list li code {
+  justify-self: start;
+}
+
+@media (min-width: 50rem) {
+  .nc-packages__list li {
+    grid-template-columns: minmax(0, 19rem) minmax(0, 1fr);
+    gap: 2rem;
+    align-items: baseline;
+  }
+}
+
+.nc-next {
+  display: grid;
+  gap: 1rem;
+  margin-top: 3.5rem;
+}
+
+.nc-next__link {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1.5rem 1.6rem;
+  border: 1px solid var(--nc-line);
+  border-radius: calc(var(--nc-radius) * 2);
+  color: var(--nc-text-strong);
+  text-decoration: none;
+}
+
+.nc-next__link:first-child {
+  background: var(--nc-band);
+  border-color: var(--nc-band);
+  color: var(--nc-on-band-strong);
+}
+
+.nc-next__label {
+  font-size: var(--sl-text-sm);
+  font-weight: 650;
+  color: var(--nc-accent);
+}
+
+.nc-next__link:first-child .nc-next__label {
+  color: var(--nc-band-path);
+}
+
+.nc-next__title {
+  font-family: var(--nc-font-display);
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.nc-next__title::after {
+  content: '\2192';
+  display: inline-block;
+  margin-inline-start: 0.4em;
+}
+
+.nc-next__link:hover {
+  border-color: var(--nc-accent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .nc-next__title::after {
+    transition: translate 200ms cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  .nc-next__link:hover .nc-next__title::after {
+    translate: 0.25rem 0;
+  }
+}
+
+@media (min-width: 50rem) {
+  .nc-next {
+    grid-template-columns: 3fr 2fr;
+  }
+}

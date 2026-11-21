@@ -1,0 +1,60 @@
+---
+title: Testing
+description: Unit test a worker by calling handle(), let policy mistakes fail at import, and run integration tests against a real Redis with a key prefix per test.
+---
+
+import { Code } from '@astrojs/starlight/components';
+import unit from '../../../../snippets/mail.worker.test.ts?raw';
+
+The package does not ship a fake queue. A fake that behaves like BullMQ for the cases that matter
+(retries, dedupe windows, schedulers, outages) is most of BullMQ, so the split is: unit tests for
+your handlers, and integration tests against a real Redis for the wiring.
+
+## Unit test a handler
+
+A worker is a class with a `handle()` method. Construct it with fakes for its dependencies and call
+`handle()` with a `JobOf<Jobs>` you build yourself:
+
+<Code code={unit.trimEnd()} lang="ts" title="mail.worker.test.ts" />
+
+The job object is typed, so a payload that drifted from the queue's job map fails to compile in the
+test too. `raw` is the BullMQ job; leave it as a stub unless the handler reads it.
+
+## Policy mistakes fail early
+
+A policy that breaks the rules does not type-check, and `defineQueue` validates the same rules at
+runtime, throwing when the module that defines the queue is imported. A test file that imports your
+queue definitions is enough to catch a bad policy built from untyped configuration.
+
+## Integration tests against Redis
+
+Run a disposable Redis with BullMQ's required eviction policy:
+
+```sh
+docker run --rm -p 6379:6379 redis:7 redis-server --maxmemory-policy noeviction
+```
+
+Then boot a Nest application context with `JobsModule` the way your app does, with two changes:
+
+- **A unique `prefix` per test** (for example a random string), so suites never see each other's
+  jobs, schedulers or dedupe keys. Delete the prefix's keys after the test.
+- **Close the app after each test.** `app.close()` drains workers, then closes the queues and the
+  producer connection, so nothing keeps the test process alive.
+
+Useful handles on `JobsRuntime` (inject it, or `app.get(JobsRuntime)`):
+
+| Member | |
+| --- | --- |
+| `whenSweepsScheduled()` | Resolves once the sweep schedulers are in Redis and stale ones are removed |
+| `scheduledSweeps` | The sweeps scheduled at boot, by name |
+| `drain(timeoutMs?)` | Stops the workers and waits for running jobs; resolves to the drained and abandoned queues |
+| `queue(definition)` | The `JobQueue` for a definition, without going through DI |
+
+For a test that only enqueues, set `workers: false` so no worker picks the job up before you
+inspect it through `queue.bull`.
+
+## Testing outages
+
+The producer's fail-fast behaviour is easiest to test with a TCP proxy between the app and Redis
+that you can cut: `add()` should reject with `EnqueueUnavailableError` within
+`producer.commandTimeoutMs`. Lower the timeout in the test to keep it fast.

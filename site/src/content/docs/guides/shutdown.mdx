@@ -1,0 +1,56 @@
+---
+title: Graceful shutdown
+description: installGracefulShutdown drains workers before the app closes, then closes queues and the producer, flushes telemetry and re-raises the signal, all within a deadline.
+---
+
+import { Code } from '@astrojs/starlight/components';
+import main from '../../../../snippets/main.ts?raw';
+
+A deploy sends SIGTERM and, after a grace period (30 s on most orchestrators), SIGKILL. A job still
+running when its database connection closes fails half done.
+
+<Code code={main.trimEnd()} lang="ts" title="main.ts" />
+
+`installGracefulShutdown(app, options)` handles SIGTERM and SIGINT in this order:
+
+1. **Drain the workers.** They stop taking jobs and wait for the running ones, bounded by
+   `drainTimeoutMs` (20 s by default). This comes before `app.close()`, because Nest runs the other
+   modules' destroy hooks in an order no provider controls.
+2. **`app.close()`.** Every Nest hook, the HTTP server, and the jobs runtime's own shutdown, which
+   closes the queues and then the producer connection.
+3. **Flush** telemetry with your `flush` function (the last jobs' spans and events included). It is
+   bounded by the deadline and never fails the shutdown.
+4. **Re-raise the signal**, so the orchestrator sees the signal's exit code, as it would from
+   `app.enableShutdownHooks()`.
+
+The whole sequence runs within `deadlineMs` (25 s by default), below the usual grace period. Past it
+the process flushes and exits non-zero instead of being killed mid-flush.
+
+A job still running at the drain timeout is abandoned. BullMQ's stalled-job check gives it to
+another worker, so handlers should be safe to run again (which retries already require).
+
+:::caution
+Use `installGracefulShutdown` instead of `app.enableShutdownHooks()`, never together with it: two
+handlers would race to end the process.
+:::
+
+## Options
+
+| Option | Default | |
+| --- | --- | --- |
+| `drainTimeoutMs` | the module's `shutdown.drainTimeoutMs` (20000) | How long to wait for running jobs |
+| `deadlineMs` | `25000` | Bound on the whole sequence; keep it above the drain timeout |
+| `flush` | none | Flushes telemetry |
+| `signals` | `['SIGTERM', 'SIGINT']` | Signals to handle |
+| `logger` | Nest's `Logger` | |
+
+`installGracefulShutdown` returns a function that removes the handlers.
+`shutdownGracefully(app, options)` runs the same sequence once without touching signals, for a
+shutdown you trigger yourself.
+
+## Choosing the numbers
+
+Keep `drainTimeoutMs < deadlineMs < grace period`. With the defaults (20 s, 25 s, 30 s), jobs get
+20 s to finish, closing and flushing get 5 s, and 5 s are left before SIGKILL. If your jobs run
+longer than the drain timeout, raise the orchestrator's grace period with them, or split the work
+into shorter jobs.

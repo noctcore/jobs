@@ -1,0 +1,77 @@
+---
+title: Queues and policies
+description: defineQueue, its typed jobs and the policy fields BullMQ would otherwise leave to a default, with what does not compile.
+---
+
+import { Code } from '@astrojs/starlight/components';
+import queue from '../../../../snippets/mail.queue.ts?raw';
+import sms from '../../../../snippets/sms.worker.ts?raw';
+
+A queue is a name, a map of job names to payload types, and a policy. It lives in a file that
+producers and workers both import, so the two sides cannot disagree about a job's shape.
+
+<Code code={queue.trimEnd()} lang="ts" title="mail.queue.ts" />
+
+A queue registered with BullMQ's defaults gets one attempt, no backoff, and keeps every finished
+job forever. Every one of those is a required field here.
+
+## Attempts and backoff
+
+```ts
+attempts: 2..20, backoff: expo(delay, { jitter? }) | fixed(delay, { jitter? })
+// or
+attempts: 'once'
+```
+
+- `attempts` is a literal from 2 to 20. Past 20 a job outlives any incident it could wait out. A
+  number read from configuration is a plain `number` and does not compile: write the literal.
+- One attempt is spelled `'once'`, for work where a retry is wrong (a non-idempotent call) or
+  pointless.
+- A retrying queue needs a backoff from `expo(delay)` (attempt n waits about `2^(n-1) * delay`) or
+  `fixed(delay)`. Both carry jitter: by default half of each step is randomised (`jitter: 0.5`), so
+  the jobs that failed in one outage do not all come back at the same instant. `jitter` must be above
+  0 and at most 1.
+
+What does not compile: `attempts: 50`, `attempts: someNumber`, retries without a backoff,
+`{ type: 'exponential', delay: 1000 }` written by hand. The same rules are checked at runtime for
+callers without types, and `defineQueue` throws at boot.
+
+## Retention
+
+```ts
+keep: { completed: Retention, failed: Retention }
+// Retention = '1d' | { age: '1d', count?: 1000 }
+```
+
+Both sets need an age. The failed set is your dead-letter queue: keep it long enough to look at.
+A count may cap a set on top of the age. `keep: { completed: false }` and
+`keep: { completed: { count: 100 } }` (a count with no age) do not compile.
+
+Retention never shortens a [dedupe window](/jobs/guides/dedupe/#dedupe-and-retention): the key is
+held in its own Redis key, not in the job.
+
+## Concurrency and pace
+
+- `concurrency` is the number of jobs one worker process runs at once. Ten replicas with
+  `concurrency: 10` run up to 100.
+- `pace: { max, per }` limits the queue as a whole, counted in Redis across every replica: at most
+  `max` jobs per `per`.
+- `paceFrom({ inject, useFactory })` resolves a pace through Nest DI at boot, for limits that belong
+  to a deployment (a provider's plan, a relay's policy).
+
+## Durations
+
+Every duration is written with its unit: `'250ms'`, `'2s'`, `'5m'`, `'1h'`, `'14d'`. A bare number
+means milliseconds. The package converts to whatever BullMQ reads at each place (milliseconds for a
+backoff, seconds for a retention age), so units never get mixed.
+
+## Names
+
+Queue, job and sweep names hold 1 to 100 letters, digits, `.`, `_` and `-`. A colon is refused:
+BullMQ uses it in its own keys.
+
+## A fuller example
+
+A queue whose jobs are rate limited by a provider, with a capped failed set:
+
+<Code code={sms.trimEnd()} lang="ts" title="sms.worker.ts" />

@@ -1,0 +1,30 @@
+---
+title: '@noctcore/jobs'
+description: BullMQ 6 for NestJS with the safe choice made the default. Typed queues, required dedupe, bounded retries and retention, sweeps that run once per tick and a shutdown that waits for running jobs.
+template: splash
+editUrl: false
+lastUpdated: false
+pagefind: false
+prev: false
+next: false
+hero:
+  title: Jobs without the traps.
+  tagline: A thin layer over BullMQ 6 for NestJS. Typed queues, a dedupe on every enqueue, jittered and bounded retries, sweeps that run once per tick, and a shutdown that waits for running jobs.
+  actions:
+    - text: Get started
+      link: /jobs/start/getting-started/
+      variant: primary
+    - text: See the traps
+      link: /jobs/start/introduction/
+      variant: secondary
+---
+
+import TrapLedger from '../../components/landing/TrapLedger.astro';
+import QueueSample from '../../components/landing/QueueSample.astro';
+import Principles from '../../components/landing/Principles.astro';
+import EntryPoints from '../../components/landing/EntryPoints.astro';
+
+<TrapLedger />
+<QueueSample />
+<Principles />
+<EntryPoints />

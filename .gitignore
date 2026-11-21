@@ -9,3 +9,12 @@ coverage/
 .env
 .env.*
 !.env.example
+.rounds/
+# Astro
+site/.astro/
+
+# Docs: TypeDoc output, generated at build time
+site/src/content/docs/reference/api/
+
+# Docs: the Changelog page, generated from packages/jobs/CHANGELOG.md
+site/src/content/docs/reference/changelog.md

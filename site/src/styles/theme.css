@@ -1,0 +1,229 @@
+/*
+ * Maps the --nc-* tokens onto Starlight's variables and sets the reading
+ * rhythm shared by every page. Colors and fonts live in the tokens file.
+ */
+:root,
+:root[data-theme='light'] {
+  --sl-font: var(--nc-font);
+  --sl-font-mono: var(--nc-font-mono);
+
+  --sl-color-white: var(--nc-text-strong);
+  --sl-color-gray-1: var(--nc-text);
+  --sl-color-gray-2: var(--nc-text-soft);
+  --sl-color-gray-3: var(--nc-muted);
+  --sl-color-gray-4: var(--nc-faint);
+  --sl-color-gray-5: var(--nc-line);
+  --sl-color-gray-6: var(--nc-bg-raised);
+  --sl-color-gray-7: var(--nc-bg-raised);
+  --sl-color-black: var(--nc-bg);
+
+  --sl-color-accent-low: var(--nc-accent-soft);
+  --sl-color-accent: var(--nc-accent);
+  --sl-color-accent-high: var(--nc-accent-strong);
+
+  --sl-color-text: var(--nc-text);
+  --sl-color-text-accent: var(--nc-accent-strong);
+  --sl-color-bg: var(--nc-bg);
+  --sl-color-bg-nav: var(--nc-bg);
+  --sl-color-bg-sidebar: var(--nc-bg);
+  --sl-color-bg-inline-code: var(--nc-bg-raised);
+  --sl-color-hairline-light: var(--nc-line-soft);
+  --sl-color-hairline: var(--nc-line-soft);
+  --sl-color-hairline-shade: var(--nc-line);
+
+  --sl-text-body: var(--nc-body-size);
+  --sl-line-height: var(--nc-body-leading);
+  --sl-line-height-headings: 1.15;
+  --sl-text-h1: clamp(2rem, 1.4rem + 2vw, 2.75rem);
+  --sl-text-h2: 1.75rem;
+  --sl-text-h3: 1.3125rem;
+  --sl-text-h4: 1.125rem;
+}
+
+:root[data-theme='light'] {
+  --sl-color-text-accent: var(--nc-accent-strong);
+}
+
+body {
+  background: var(--nc-bg);
+  color: var(--nc-text);
+  font-feature-settings: 'kern', 'liga';
+  text-rendering: optimizeLegibility;
+}
+
+.site-title {
+  font-family: var(--nc-font-display);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--nc-text-strong);
+}
+
+/* Headings */
+.sl-markdown-content :is(h1, h2, h3, h4, h5),
+h1#_top {
+  font-family: var(--nc-font-display);
+  font-weight: var(--nc-display-weight);
+  letter-spacing: var(--nc-display-tracking);
+  color: var(--nc-text-strong);
+  text-wrap: balance;
+}
+
+.sl-markdown-content h2 {
+  margin-top: 2.6em;
+}
+
+.sl-markdown-content h3 {
+  margin-top: 2em;
+}
+
+.sl-markdown-content p,
+.sl-markdown-content li {
+  text-wrap: pretty;
+}
+
+.sl-markdown-content strong {
+  color: var(--nc-text-strong);
+  font-weight: 650;
+}
+
+/* Links: ink colored with an accent underline, so a dense paragraph stays readable. */
+.sl-markdown-content a:not(:where(.not-content *)) {
+  color: var(--nc-text-strong);
+  text-decoration-color: var(--nc-accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+}
+
+.sl-markdown-content a:not(:where(.not-content *)):hover {
+  color: var(--nc-accent-strong);
+  text-decoration-thickness: 2px;
+}
+
+/* Inline code */
+/* Inline code: a tint only. The generated API pages put every type in its own span, and borders turned them into a row of boxes. */
+.sl-markdown-content :not(pre) > code:not(:where(.not-content *)) {
+  border-radius: var(--nc-radius);
+  padding: 0.08em 0.3em;
+  font-size: 0.875em;
+}
+
+/* Sidebar: current page marked by weight and a tinted ground, never a side stripe. */
+.sidebar-content a[aria-current='page'],
+.sidebar-content a[aria-current='page']:hover {
+  background: var(--nc-accent-soft);
+  color: var(--nc-text-strong);
+  font-weight: 650;
+}
+
+.sidebar-content .group-label .large {
+  font-family: var(--nc-font-display);
+  font-weight: 700;
+  color: var(--nc-text-strong);
+}
+
+/* Asides: full hairline border and a tint, no thick left stripe. */
+.starlight-aside {
+  border: 1px solid var(--nc-line);
+  border-radius: var(--nc-radius);
+  background: var(--nc-bg-raised);
+}
+
+.starlight-aside--caution,
+.starlight-aside--danger {
+  border-color: color-mix(in oklch, var(--nc-accent) 45%, var(--nc-line));
+  background: color-mix(in oklch, var(--nc-accent-soft) 60%, var(--nc-bg));
+}
+
+.starlight-aside__title {
+  font-family: var(--nc-font-display);
+  color: var(--nc-text-strong);
+}
+
+.starlight-aside .starlight-aside__icon {
+  color: var(--nc-accent);
+}
+
+/* Tables */
+.sl-markdown-content table {
+  font-size: 0.94em;
+}
+
+.sl-markdown-content :is(th, td) {
+  border-color: var(--nc-line-soft);
+}
+
+/* Pagination and right rail */
+.pagination-links a {
+  border-color: var(--nc-line);
+  box-shadow: none;
+}
+
+.pagination-links a:hover {
+  border-color: var(--nc-accent);
+}
+
+starlight-toc a[aria-current='true'] {
+  color: var(--nc-accent-strong);
+  font-weight: 600;
+}
+
+/* Buttons used by the hero and elsewhere. */
+.sl-link-button.primary {
+  background: var(--nc-text-strong);
+  border-color: var(--nc-text-strong);
+  color: var(--nc-bg);
+}
+
+.sl-link-button.primary:hover {
+  background: var(--nc-accent-strong);
+  border-color: var(--nc-accent-strong);
+  color: var(--nc-bg);
+}
+
+.sl-link-button.secondary {
+  border-color: var(--nc-line);
+  color: var(--nc-text-strong);
+}
+
+.sl-link-button.secondary:hover {
+  border-color: var(--nc-text-strong);
+}
+
+:focus-visible {
+  outline: 2px solid var(--nc-accent);
+  outline-offset: 2px;
+}
+
+/* Quick, quiet feedback on every page: color and tint only, never position. */
+@media (prefers-reduced-motion: no-preference) {
+  .sl-markdown-content a,
+  .sl-link-button,
+  .sidebar-content a,
+  starlight-toc a,
+  .pagination-links a,
+  .social-icons a,
+  site-search button {
+    transition:
+      color 160ms cubic-bezier(0.25, 1, 0.5, 1),
+      background-color 160ms cubic-bezier(0.25, 1, 0.5, 1),
+      border-color 160ms cubic-bezier(0.25, 1, 0.5, 1),
+      text-decoration-color 160ms cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  .pagination-links a svg {
+    transition: translate 200ms cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  .pagination-links a[rel='next']:hover svg {
+    translate: 0.2rem 0;
+  }
+
+  .pagination-links a[rel='prev']:hover svg {
+    translate: -0.2rem 0;
+  }
+}
+
+.sidebar-content a:hover:not([aria-current='page']) {
+  color: var(--nc-text-strong);
+  background: color-mix(in oklch, var(--nc-accent-soft) 45%, transparent);
+}

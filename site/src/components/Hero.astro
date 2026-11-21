@@ -1,0 +1,67 @@
+---
+/**
+ * Replaces Starlight's hero on splash pages. Title, tagline and actions come
+ * from the page's `hero` frontmatter; the art below is the brand hero
+ * (HeroArt.astro), one image per theme.
+ */
+import { LinkButton } from '@astrojs/starlight/components';
+import HeroArt from './landing/HeroArt.astro';
+
+const { data } = Astro.locals.starlightRoute.entry;
+const { title = data.title, tagline, actions = [] } = data.hero ?? {};
+// Starlight renders its 404 as a splash page too; it gets a plain way back
+// instead of the landing's install line and diagram.
+const notFound = Astro.locals.starlightRoute.id === '404';
+const home = import.meta.env.BASE_URL.replace(/\/?$/u, '/');
+---
+
+{
+  notFound ? (
+    <header class="nc-hero nc-hero--missing not-content">
+      <div class="nc-hero__lead">
+        <p class="nc-eyebrow">404</p>
+        <h1 id="_top" data-page-title>Page not found</h1>
+        <p class="nc-hero__tagline">
+          The address may be from an older version of these docs. Start from the overview, or press
+          the search button and look for the topic.
+        </p>
+        <div class="nc-hero__actions">
+          <LinkButton href={home}>Go to the overview</LinkButton>
+          <LinkButton href={`${home}start/getting-started/`} variant="secondary">
+            Getting started
+          </LinkButton>
+        </div>
+      </div>
+    </header>
+  ) : (
+
+<header class="nc-hero not-content">
+  <div class="nc-hero__lead">
+    <p class="nc-eyebrow">Background jobs for NestJS</p>
+    <h1 id="_top" data-page-title set:html={title} />
+  </div>
+  <div class="nc-hero__copy">
+    {tagline && <p class="nc-hero__tagline" set:html={tagline} />}
+    {
+      actions.length > 0 && (
+        <div class="nc-hero__actions">
+          {actions.map(({ link: href, text, variant, icon }) => (
+            <LinkButton {href} {variant} icon={icon?.name}>
+              {text}
+            </LinkButton>
+          ))}
+        </div>
+      )
+    }
+    <p class="nc-install">
+      <span class="nc-install__prompt" aria-hidden="true">$</span>
+      <code>bun add @noctcore/jobs bullmq ioredis</code>
+    </p>
+    <p class="nc-hero__status">0.x on npm. NestJS 11 or 12, BullMQ 6, Node 22 or later.</p>
+  </div>
+  <figure class="nc-hero__art" data-slot="hero-art">
+    <HeroArt />
+  </figure>
+</header>
+  )
+}

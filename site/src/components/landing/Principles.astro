@@ -1,0 +1,42 @@
+---
+/** The package's hard constraints, set as a spec sheet rather than a grid of cards. */
+---
+
+<section class="nc-section nc-rules not-content" aria-labelledby="nc-rules-title">
+  <h2 id="nc-rules-title" class="nc-rules__title">What it refuses to do</h2>
+  <dl class="nc-rules__list">
+    <div class="nc-rule nc-rule--lead">
+      <dt><span class="nc-rule__no">No</span> silent default</dt>
+      <dd>
+        Attempts, backoff, retention, concurrency and a dedupe on every <code>add()</code> are
+        choices you write down. A single attempt is spelled <code>'once'</code>; no dedupe is spelled
+        <code>dedupe.none()</code>.
+      </dd>
+    </div>
+    <div class="nc-rule">
+      <dt><span class="nc-rule__no">No</span> caller jobId</dt>
+      <dd>
+        BullMQ assigns every id. A dedupe goes through its own Redis key, hashed with SHA-256, so it
+        never depends on how long a job is kept.
+      </dd>
+    </div>
+    <div class="nc-rule">
+      <dt><span class="nc-rule__no">No</span> hanging enqueue</dt>
+      <dd>
+        Producers and workers get opposite Redis policies on separate connections. An
+        <code>add()</code> either lands or fails within its bound.
+      </dd>
+    </div>
+    <div class="nc-rule">
+      <dt><span class="nc-rule__no">No</span> zoneless cron</dt>
+      <dd>A sweep's cron needs its <code>tz</code>, and a renamed sweep is removed from Redis at boot.</dd>
+    </div>
+    <div class="nc-rule">
+      <dt><span class="nc-rule__no">No</span> vendor SDK</dt>
+      <dd>
+        Metrics, tracing and error reporting are three small interfaces. The adapters take the
+        prom-client, OpenTelemetry or Sentry module you already have.
+      </dd>
+    </div>
+  </dl>
+</section>
