@@ -1,9 +1,16 @@
 <div align="center">
-  <h1>noctcore jobs</h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/readme-header-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/brand/readme-header-light.svg">
+    <img src="assets/brand/readme-header-light.svg" width="100%" alt="noctcore/jobs. Jobs without the traps. Every add picks a dedupe. Every retry backs off. Diagram: add() passes the producer, the dedupe and the queue policy to a JobHost worker and ends completed; a hung request stops at the producer, a duplicate job at the dedupe and a retry storm at the policy.">
+  </picture>
 
-  <p><strong>BullMQ 6 for NestJS with the safe choice made the default: typed queues, required dedupe, bounded retries and retention, sweeps that run once per tick, and a shutdown that waits for running jobs.</strong></p>
+  <h1>@noctcore/jobs</h1>
+
+  <p><strong>BullMQ 6 for NestJS with the safe choice made the default: typed queues, a required dedupe, bounded retries and retention, sweeps that run once per tick, and a shutdown that waits for running jobs.</strong></p>
 
   <p>
+    <a href="https://www.npmjs.com/package/@noctcore/jobs"><img src="https://img.shields.io/npm/v/@noctcore/jobs?style=flat&color=3b4a8c&label=npm" alt="npm version"></a>
     <a href="https://github.com/noctcore/jobs/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/noctcore/jobs/ci.yml?branch=main&style=flat&label=ci" alt="CI status"></a>
     <a href="https://scorecard.dev/viewer/?uri=github.com/noctcore/jobs"><img src="https://api.scorecard.dev/projects/github.com/noctcore/jobs/badge" alt="OpenSSF Scorecard"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-3b4a8c?style=flat" alt="MIT license"></a>
@@ -12,6 +19,8 @@
   </p>
 
   <p>
+    <a href="https://noctcore.github.io/jobs/"><strong>Docs</strong></a>
+    &nbsp;·&nbsp;
     <a href="#quick-start"><strong>Quick start</strong></a>
     &nbsp;·&nbsp;
     <a href="#the-traps"><strong>The traps</strong></a>
@@ -25,8 +34,8 @@
 <a id="status"></a>
 
 > [!NOTE]
-> **0.x.** The API may change between minor versions. Pin an exact version and read the changelog
-> before you upgrade.
+> **0.x.** The API may change between minor versions. Pin an exact version and read the
+> [changelog](https://noctcore.github.io/jobs/reference/changelog/) before you upgrade.
 
 ## What it is
 
@@ -52,6 +61,8 @@ it. Underneath it is still BullMQ: the same Redis keys, the same `Queue`, `Worke
   directly; a queue of independent jobs does not.
 - **You need flows, a dashboard or an outbox.** They are out of scope here. BullMQ's own flows,
   and dashboards that read BullMQ's keys, work alongside this package through `queue.bull`.
+
+The [docs](https://noctcore.github.io/jobs/) have a guide per part: [queues and policies](https://noctcore.github.io/jobs/guides/queues-and-policies/), [dedupe](https://noctcore.github.io/jobs/guides/dedupe/), [workers](https://noctcore.github.io/jobs/guides/workers/), [sweeps](https://noctcore.github.io/jobs/guides/sweeps/), [connections](https://noctcore.github.io/jobs/guides/connections/), [shutdown](https://noctcore.github.io/jobs/guides/shutdown/), [telemetry](https://noctcore.github.io/jobs/guides/telemetry/) and [testing](https://noctcore.github.io/jobs/guides/testing/).
 
 ## Install
 
@@ -188,6 +199,9 @@ await app.listen(3000);
 
 ## API
 
+The essentials are below; every export with its type is in the
+[API reference](https://noctcore.github.io/jobs/reference/api/).
+
 ### `JobsModule.forRoot(options)` / `forRootAsync({ imports, inject, useFactory })`
 
 A global module. `forFeature([queues])` makes each queue injectable with `@InjectQueue(queue)`.
@@ -296,12 +310,20 @@ None of these is a dependency; pass the module you already have.
 import * as promClient from 'prom-client';
 import * as otel from '@opentelemetry/api';
 import * as Sentry from '@sentry/node';
-import { openTelemetryTracing, prometheusMetrics, sentryReporter } from '@noctcore/jobs';
+import {
+  openTelemetryTracing,
+  prometheusMetrics,
+  sentryReporter,
+  type PromClientLike,
+} from '@noctcore/jobs';
 
 JobsModule.forRoot({
   redisUrl,
   telemetry: {
-    metrics: prometheusMetrics(promClient), // jobs_job_duration_seconds, jobs_job_failures_total, jobs_sweep_failures_total, jobs_sweep_last_success_timestamp_seconds
+    // jobs_job_duration_seconds, jobs_job_failures_total, jobs_sweep_failures_total,
+    // jobs_sweep_last_success_timestamp_seconds. The cast is needed in 0.1.0: PromClientLike
+    // types `registers` more loosely than prom-client 15 does.
+    metrics: prometheusMetrics(promClient as unknown as PromClientLike),
     tracing: openTelemetryTracing(otel),
     errors: sentryReporter(Sentry),
   },
